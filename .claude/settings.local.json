@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(npx cdk:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run dev:*)",
+      "Bash(aws logs:*)",
+      "Bash(tree:*)",
+      "Bash(aws s3 sync:*)",
+      "Bash(aws cloudfront create-invalidation:*)"
+    ]
+  }
+}

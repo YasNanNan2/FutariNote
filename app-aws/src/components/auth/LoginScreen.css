@@ -1,0 +1,219 @@
+/* LoginScreen スタイル */
+
+/* ログイン画面全体 */
+[data-amplify-authenticator] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #FF6B9D 0%, #FF8C94 50%, #FFE66D 100%);
+  padding: 20px;
+}
+
+/* カード */
+[data-amplify-authenticator] [data-amplify-container] {
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ヘッダー部分（ロゴ・タイトル） */
+.login-logo {
+  font-size: 64px;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.login-title {
+  margin: 0 0 8px !important;
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: #333 !important;
+  font-family: 'Zen Maru Gothic', sans-serif !important;
+}
+
+.login-subtitle {
+  margin: 0 !important;
+  font-size: 14px !important;
+  color: #888 !important;
+}
+
+.login-footer {
+  font-size: 12px !important;
+  color: #AAA !important;
+}
+
+/* Amplify UI テーマ変数 */
+[data-amplify-authenticator] {
+  --amplify-components-authenticator-router-border-width: 0;
+  --amplify-components-authenticator-router-box-shadow: none;
+  --amplify-components-authenticator-form-padding: 0 24px 24px;
+
+  /* カラー */
+  --amplify-colors-brand-primary-10: #FFF0F3;
+  --amplify-colors-brand-primary-20: #FFD6E0;
+  --amplify-colors-brand-primary-40: #FF8CAA;
+  --amplify-colors-brand-primary-60: #FF6B9D;
+  --amplify-colors-brand-primary-80: #E85A8A;
+  --amplify-colors-brand-primary-90: #D14A7A;
+  --amplify-colors-brand-primary-100: #BA3A6A;
+
+  /* フォント */
+  --amplify-fonts-default-variable: 'Zen Maru Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --amplify-fonts-default-static: 'Zen Maru Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* 角丸 */
+  --amplify-components-button-border-radius: 12px;
+  --amplify-components-fieldcontrol-border-radius: 12px;
+  --amplify-components-tabs-item-border-radius: 12px 12px 0 0;
+}
+
+/* タブ（ログイン/新規登録） */
+[data-amplify-authenticator] [data-amplify-router] {
+  border: none;
+  background: transparent;
+}
+
+[data-amplify-authenticator] .amplify-tabs {
+  border-bottom: 2px solid #F0F0F0;
+}
+
+[data-amplify-authenticator] .amplify-tabs-item {
+  color: #888;
+  font-weight: 500;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  transition: all 0.2s;
+}
+
+[data-amplify-authenticator] .amplify-tabs-item:hover {
+  color: #FF6B9D;
+}
+
+[data-amplify-authenticator] .amplify-tabs-item[data-state="active"] {
+  color: #FF6B9D;
+  border-bottom: 2px solid #FF6B9D;
+  background: transparent;
+}
+
+/* フォーム */
+[data-amplify-authenticator] .amplify-input {
+  border: 2px solid #E8E8E8;
+  padding: 14px 16px;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+[data-amplify-authenticator] .amplify-input:focus {
+  border-color: #FF6B9D;
+  box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.15);
+}
+
+[data-amplify-authenticator] .amplify-label {
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+/* メインボタン（ログイン/新規登録） */
+[data-amplify-authenticator] .amplify-button--primary {
+  background: linear-gradient(135deg, #FF6B9D 0%, #FF8C94 100%);
+  border: none;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
+  transition: all 0.2s;
+}
+
+[data-amplify-authenticator] .amplify-button--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+}
+
+[data-amplify-authenticator] .amplify-button--primary:active {
+  transform: translateY(0);
+}
+
+/* Googleログインボタン */
+[data-amplify-authenticator] .federated-sign-in-button {
+  border: 2px solid #E8E8E8 !important;
+  border-radius: 12px !important;
+  padding: 12px 24px !important;
+  font-weight: 500 !important;
+  color: #333 !important;
+  background: white !important;
+  transition: all 0.2s !important;
+}
+
+[data-amplify-authenticator] .federated-sign-in-button:hover {
+  border-color: #4285f4 !important;
+  background: #F8FAFF !important;
+}
+
+/* 区切り線（または） */
+[data-amplify-authenticator] .amplify-divider {
+  margin: 20px 0;
+}
+
+[data-amplify-authenticator] .amplify-divider::before,
+[data-amplify-authenticator] .amplify-divider::after {
+  background: #E8E8E8;
+}
+
+[data-amplify-authenticator] .amplify-divider--label {
+  color: #AAA;
+  font-size: 13px;
+}
+
+/* リンク（パスワードを忘れた等） */
+[data-amplify-authenticator] .amplify-button--link {
+  color: #FF6B9D;
+  font-weight: 500;
+}
+
+[data-amplify-authenticator] .amplify-button--link:hover {
+  color: #E85A8A;
+  background: transparent;
+}
+
+/* エラーメッセージ */
+[data-amplify-authenticator] .amplify-alert--error {
+  border-radius: 12px;
+  border: none;
+  background: #FFF0F0;
+  color: #D32F2F;
+}
+
+/* パスワード表示トグル */
+[data-amplify-authenticator] .amplify-field__show-password {
+  color: #888;
+}
+
+[data-amplify-authenticator] .amplify-field__show-password:hover {
+  color: #FF6B9D;
+  background: transparent;
+}
+
+/* レスポンシブ */
+@media (max-width: 480px) {
+  [data-amplify-authenticator] {
+    padding: 16px;
+  }
+
+  [data-amplify-authenticator] [data-amplify-container] {
+    border-radius: 20px;
+  }
+
+  .login-logo {
+    font-size: 56px;
+  }
+
+  .login-title {
+    font-size: 24px !important;
+  }
+}

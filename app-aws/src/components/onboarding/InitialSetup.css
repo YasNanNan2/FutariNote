@@ -1,0 +1,157 @@
+.initial-setup-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFF5F7 0%, #FFF0F3 100%);
+  padding: 20px;
+}
+
+.initial-setup-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  padding: 32px 24px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(255, 107, 157, 0.15);
+  position: relative;
+}
+
+.initial-setup-card h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  color: #333;
+}
+
+.setup-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.setup-description {
+  color: #888;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.setup-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.setup-option-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.setup-option-button:hover {
+  transform: translateY(-2px);
+}
+
+.setup-option-button:active {
+  transform: translateY(0);
+}
+
+.setup-option-button.primary {
+  background: linear-gradient(135deg, #FF6B9D 0%, #FF8C94 100%);
+  color: #FFF;
+  box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+}
+
+.setup-option-button.secondary {
+  background: #F8F8F8;
+  color: #333;
+  border: 2px solid #EEE;
+}
+
+.setup-option-button .option-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.setup-option-button .option-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.setup-option-button .option-desc {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.setup-option-button.secondary .option-desc {
+  color: #888;
+}
+
+.back-button {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.back-button:hover {
+  color: #333;
+}
+
+.code-input {
+  width: 100%;
+  padding: 16px;
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 8px;
+  border: 2px solid #EEE;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+  font-family: monospace;
+}
+
+.code-input:focus {
+  outline: none;
+  border-color: #FF6B9D;
+}
+
+.error-message {
+  color: #E55;
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FF6B9D 0%, #FF8C94 100%);
+  color: #FFF;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submit-button:not(:disabled):hover {
+  opacity: 0.9;
+}

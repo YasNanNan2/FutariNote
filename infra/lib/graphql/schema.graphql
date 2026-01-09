@@ -1,0 +1,264 @@
+# ふたりノート GraphQL スキーマ
+
+# ===========================================
+# Scalar Types
+# ===========================================
+scalar AWSDate
+scalar AWSDateTime
+scalar AWSJSON
+
+# ===========================================
+# Enums
+# ===========================================
+enum Category {
+  CLEANING
+  COOKING
+  SHOPPING
+  CHILDCARE
+  PET
+  OTHER
+}
+
+enum StampType {
+  LOVE
+  THANKS
+  STAR
+  MUSCLE
+  SPARKLE
+  HEART
+}
+
+# ===========================================
+# Types
+# ===========================================
+
+type User {
+  userId: ID!
+  name: String
+  email: String!
+  color: String
+  partnerId: ID
+  createdAt: AWSDateTime!
+}
+
+type Couple {
+  id: ID!
+  users: [User!]!
+  tasks: [Task!]!
+  goals: [Goal!]!
+  timeline: [TimelineEntry!]!
+  totalStamps: StampCount!
+  createdAt: AWSDateTime!
+}
+
+type Task {
+  id: ID!
+  partnerId: ID
+  title: String!
+  date: AWSDate!
+  assignee: String!
+  category: Category!
+  completed: Boolean!
+  createdBy: String!
+  createdAt: AWSDateTime!
+  completedAt: AWSDateTime
+}
+
+type Goal {
+  id: ID!
+  partnerId: ID
+  title: String!
+  deadline: AWSDate!
+  icon: String!
+  targetAmount: Int       # 目標金額（円）
+  currentAmount: Int      # 現在の金額（円）
+  achieved: Boolean       # 達成済みフラグ
+  achievedAt: AWSDateTime # 達成日時
+  createdAt: AWSDateTime!
+}
+
+type TimelineEntry {
+  id: ID!
+  timestamp: AWSDateTime!
+  user: String!
+  userColor: String!
+  action: String!
+  details: String!
+}
+
+type Stamp {
+  id: ID!
+  from: String!
+  to: String!
+  stampType: StampType!
+  timestamp: AWSDateTime!
+  taskId: ID          # 関連タスクID（タスク完了への感謝の場合）
+}
+
+type StampCount {
+  love: Int!
+  thanks: Int!
+  star: Int!
+  muscle: Int!
+  sparkle: Int!
+  heart: Int!
+}
+
+type InviteCode {
+  code: String!
+  userId: String!
+  partnerId: String
+  expiresAt: AWSDateTime!
+}
+
+type DeleteAccountResult {
+  success: Boolean!
+  deletedItems: Int!
+}
+
+# ===========================================
+# Input Types
+# ===========================================
+
+input CreateTaskInput {
+  partnerId: ID!
+  title: String!
+  date: AWSDate!
+  assignee: String!
+  category: Category!
+}
+
+input UpdateTaskInput {
+  partnerId: ID!
+  id: ID!
+  title: String
+  date: AWSDate
+  assignee: String
+  category: Category
+}
+
+input CreateGoalInput {
+  partnerId: ID!
+  title: String!
+  deadline: AWSDate!
+  icon: String!
+  targetAmount: Int
+  currentAmount: Int
+}
+
+input UpdateGoalInput {
+  partnerId: ID!
+  id: ID!
+  title: String
+  deadline: AWSDate
+  icon: String
+  targetAmount: Int
+  currentAmount: Int
+  achieved: Boolean
+}
+
+input SendStampInput {
+  partnerId: ID!
+  to: String!
+  stampType: StampType!
+  taskId: ID          # 関連タスクID（タスク完了への感謝の場合）
+}
+
+input UpdateUserInput {
+  name: String
+  color: String
+}
+
+# ===========================================
+# Queries
+# ===========================================
+
+type Query {
+  # カップル全データ取得
+  getCouple(partnerId: ID!): Couple
+
+  # 自分のユーザー情報
+  getMe: User
+
+  # タスク関連
+  getTasks(partnerId: ID!, limit: Int, nextToken: String): [Task!]!
+  getTasksByMonth(partnerId: ID!, month: String!): [Task!]!
+  getTasksByDate(partnerId: ID!, date: AWSDate!): [Task!]!
+  getTask(partnerId: ID!, id: ID!): Task
+
+  # ゴール関連
+  getGoals(partnerId: ID!): [Goal!]!
+  getGoal(partnerId: ID!, id: ID!): Goal
+
+  # タイムライン
+  getTimeline(partnerId: ID!, limit: Int, nextToken: String): [TimelineEntry!]!
+
+  # スタンプ
+  getStamps(partnerId: ID!, limit: Int, nextToken: String): [Stamp!]!
+  getStampStats(partnerId: ID!): StampCount!
+
+  # 招待コード検証
+  validateInviteCode(code: String!): InviteCode
+}
+
+# ===========================================
+# Mutations
+# ===========================================
+
+type Mutation {
+  # タスク操作
+  createTask(input: CreateTaskInput!): Task!
+  updateTask(input: UpdateTaskInput!): Task!
+  completeTask(partnerId: ID!, taskId: ID!): Task!
+  uncompleteTask(partnerId: ID!, taskId: ID!): Task!
+  deleteTask(partnerId: ID!, taskId: ID!): Task
+
+  # ゴール操作
+  createGoal(input: CreateGoalInput!): Goal!
+  updateGoal(input: UpdateGoalInput!): Goal!
+  deleteGoal(partnerId: ID!, goalId: ID!): Goal
+
+  # スタンプ送信
+  sendStamp(input: SendStampInput!): Stamp!
+
+  # ユーザー情報更新
+  updateUser(input: UpdateUserInput!): User!
+
+  # カップリング（Lambda Resolver）
+  createInviteCode: InviteCode!
+  joinCouple(code: String!): Couple!
+  leaveCouple: Boolean!
+
+  # アカウント削除（Lambda Resolver）
+  deleteAccount: DeleteAccountResult!
+}
+
+# ===========================================
+# Subscriptions
+# ===========================================
+
+type Subscription {
+  # タスク更新通知（partnerIdでフィルタリング）
+  onTaskCreated(partnerId: ID!): Task
+    @aws_subscribe(mutations: ["createTask"])
+
+  onTaskUpdated(partnerId: ID!): Task
+    @aws_subscribe(mutations: ["updateTask", "completeTask", "uncompleteTask"])
+
+  onTaskDeleted(partnerId: ID!): Task
+    @aws_subscribe(mutations: ["deleteTask"])
+
+  # ゴール更新通知
+  onGoalCreated(partnerId: ID!): Goal
+    @aws_subscribe(mutations: ["createGoal"])
+
+  onGoalUpdated(partnerId: ID!): Goal
+    @aws_subscribe(mutations: ["updateGoal"])
+
+  onGoalDeleted(partnerId: ID!): Goal
+    @aws_subscribe(mutations: ["deleteGoal"])
+
+  # スタンプ受信通知
+  onStampReceived(partnerId: ID!): Stamp
+    @aws_subscribe(mutations: ["sendStamp"])
+}

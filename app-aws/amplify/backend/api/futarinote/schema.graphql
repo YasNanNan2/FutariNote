@@ -1,0 +1,327 @@
+# ふたりノート GraphQL スキーマ
+# AWS AppSync用スキーマ定義
+
+# ============================================
+# カスタムスカラー型
+# ============================================
+scalar AWSDate
+scalar AWSDateTime
+scalar AWSJSON
+scalar AWSEmail
+
+# ============================================
+# 列挙型
+# ============================================
+
+enum Category {
+  CLEANING
+  COOKING
+  SHOPPING
+  CHILDCARE
+  PET
+  OTHER
+}
+
+enum StampType {
+  LOVE
+  THANKS
+  STAR
+  MUSCLE
+  SPARKLE
+  HEART
+}
+
+enum GoalIcon {
+  TRAVEL
+  HOUSE
+  CAR
+  BABY
+  RING
+  GIFT
+  SAVINGS
+  CELEBRATE
+}
+
+enum UserColor {
+  BLUE
+  PINK
+  GREEN
+  PURPLE
+  ORANGE
+  RED
+}
+
+# ============================================
+# 型定義
+# ============================================
+
+type User {
+  userId: ID!
+  name: String!
+  email: AWSEmail!
+  color: UserColor!
+  partnerId: String
+  createdAt: AWSDateTime!
+}
+
+type Couple {
+  id: ID!
+  users: [User!]!
+  tasks: [Task!]!
+  goals: [Goal!]!
+  timeline: [TimelineEntry!]!
+  totalStamps: StampCount!
+  createdAt: AWSDateTime!
+}
+
+type Task {
+  id: ID!
+  partnerId: String!
+  title: String!
+  date: AWSDate!
+  assignee: String!
+  category: Category!
+  completed: Boolean!
+  createdBy: String!
+  createdAt: AWSDateTime!
+  completedAt: AWSDateTime
+}
+
+type Goal {
+  id: ID!
+  partnerId: String!
+  title: String!
+  deadline: AWSDate!
+  icon: GoalIcon!
+  createdAt: AWSDateTime!
+}
+
+type TimelineEntry {
+  id: ID!
+  partnerId: String!
+  timestamp: AWSDateTime!
+  user: String!
+  userColor: UserColor!
+  action: String!
+  details: String!
+}
+
+type Stamp {
+  id: ID!
+  partnerId: String!
+  from: String!
+  to: String!
+  stampType: StampType!
+  timestamp: AWSDateTime!
+}
+
+type StampCount {
+  love: Int!
+  thanks: Int!
+  star: Int!
+  muscle: Int!
+  sparkle: Int!
+  heart: Int!
+}
+
+type InviteCode {
+  code: String!
+  userId: String!
+  partnerId: String
+  expiresAt: AWSDateTime!
+  createdAt: AWSDateTime!
+}
+
+# ============================================
+# 入力型
+# ============================================
+
+input CreateTaskInput {
+  title: String!
+  date: AWSDate!
+  assignee: String!
+  category: Category!
+}
+
+input UpdateTaskInput {
+  id: ID!
+  title: String
+  date: AWSDate
+  assignee: String
+  category: Category
+  completed: Boolean
+}
+
+input CreateGoalInput {
+  title: String!
+  deadline: AWSDate!
+  icon: GoalIcon!
+}
+
+input UpdateGoalInput {
+  id: ID!
+  title: String
+  deadline: AWSDate
+  icon: GoalIcon
+}
+
+input SendStampInput {
+  to: String!
+  stampType: StampType!
+}
+
+input UpdateUserInput {
+  name: String
+  color: UserColor
+}
+
+# ============================================
+# クエリ
+# ============================================
+
+type Query {
+  # カップル情報取得
+  getCouple: Couple
+
+  # 現在のユーザー情報取得
+  getMe: User
+
+  # タスク一覧取得
+  getTasks(
+    limit: Int
+    nextToken: String
+  ): TaskConnection
+
+  # 特定月のタスク取得
+  getTasksByMonth(
+    month: AWSDate!
+  ): [Task!]!
+
+  # 特定日のタスク取得
+  getTasksByDate(
+    date: AWSDate!
+  ): [Task!]!
+
+  # タスク詳細取得
+  getTask(id: ID!): Task
+
+  # ゴール一覧取得
+  getGoals: [Goal!]!
+
+  # ゴール詳細取得
+  getGoal(id: ID!): Goal
+
+  # タイムライン取得
+  getTimeline(
+    limit: Int
+    nextToken: String
+  ): TimelineConnection
+
+  # スタンプ履歴取得
+  getStamps(
+    limit: Int
+    nextToken: String
+  ): StampConnection
+
+  # 招待コード検証
+  validateInviteCode(code: String!): InviteCode
+}
+
+# ============================================
+# ミューテーション
+# ============================================
+
+type Mutation {
+  # ユーザー情報更新
+  updateUser(input: UpdateUserInput!): User
+
+  # タスク作成
+  createTask(input: CreateTaskInput!): Task
+
+  # タスク更新
+  updateTask(input: UpdateTaskInput!): Task
+
+  # タスク完了
+  completeTask(taskId: ID!): Task
+
+  # タスク削除
+  deleteTask(taskId: ID!): Task
+
+  # ゴール作成
+  createGoal(input: CreateGoalInput!): Goal
+
+  # ゴール更新
+  updateGoal(input: UpdateGoalInput!): Goal
+
+  # ゴール削除
+  deleteGoal(goalId: ID!): Goal
+
+  # スタンプ送信
+  sendStamp(input: SendStampInput!): Stamp
+
+  # 招待コード生成
+  createInviteCode: InviteCode
+
+  # 招待コードでカップル参加
+  joinCouple(code: String!): Couple
+
+  # カップル解消
+  leaveCouple: Boolean
+}
+
+# ============================================
+# サブスクリプション
+# ============================================
+
+type Subscription {
+  # タスク作成時
+  onTaskCreated(partnerId: String!): Task
+    @aws_subscribe(mutations: ["createTask"])
+
+  # タスク更新時
+  onTaskUpdated(partnerId: String!): Task
+    @aws_subscribe(mutations: ["updateTask", "completeTask"])
+
+  # タスク削除時
+  onTaskDeleted(partnerId: String!): Task
+    @aws_subscribe(mutations: ["deleteTask"])
+
+  # ゴール作成時
+  onGoalCreated(partnerId: String!): Goal
+    @aws_subscribe(mutations: ["createGoal"])
+
+  # ゴール更新時
+  onGoalUpdated(partnerId: String!): Goal
+    @aws_subscribe(mutations: ["updateGoal"])
+
+  # ゴール削除時
+  onGoalDeleted(partnerId: String!): Goal
+    @aws_subscribe(mutations: ["deleteGoal"])
+
+  # スタンプ受信時
+  onStampReceived(partnerId: String!, to: String!): Stamp
+    @aws_subscribe(mutations: ["sendStamp"])
+
+  # タイムライン追加時
+  onTimelineAdded(partnerId: String!): TimelineEntry
+    @aws_subscribe(mutations: ["createTask", "updateTask", "completeTask", "sendStamp"])
+}
+
+# ============================================
+# ページネーション用型
+# ============================================
+
+type TaskConnection {
+  items: [Task!]!
+  nextToken: String
+}
+
+type TimelineConnection {
+  items: [TimelineEntry!]!
+  nextToken: String
+}
+
+type StampConnection {
+  items: [Stamp!]!
+  nextToken: String
+}
