@@ -11,9 +11,12 @@ export const STAMPS = [
 export const CATEGORIES = [
   { id: 'cleaning', label: '掃除', icon: '🧹', color: '#4ECDC4' },
   { id: 'cooking', label: '料理', icon: '🍳', color: '#FF6B9D' },
+  { id: 'laundry', label: '洗濯', icon: '👕', color: '#5DADE2' },
+  { id: 'dishes', label: '洗い物', icon: '🍽️', color: '#48C9B0' },
   { id: 'shopping', label: '買い物', icon: '🛒', color: '#FFE66D' },
   { id: 'childcare', label: '育児', icon: '👶', color: '#95E1D3' },
   { id: 'pet', label: 'ペット', icon: '🐕', color: '#F8B500' },
+  { id: 'study', label: '自己研鑽', icon: '📚', color: '#9B59B6' },
   { id: 'other', label: 'その他', icon: '📌', color: '#B8B8D1' },
 ];
 

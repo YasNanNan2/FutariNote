@@ -30,6 +30,10 @@ const TasksTab = ({
     thankedTaskIds = new Set(),
 }) => {
     const [taskTab, setTaskTab] = useState('incomplete');
+    // デフォルトは全カテゴリ選択
+    const [selectedCategories, setSelectedCategories] = useState(
+        new Set(CATEGORIES.map(c => c.id))
+    );
 
     const isMyAssignee = (assignee) => {
         return assignee === currentUser?.userId ||
@@ -65,13 +69,42 @@ const TasksTab = ({
         return '#888';
     };
 
+    // カテゴリフィルタを適用
+    const matchesCategory = (task) => {
+        if (selectedCategories.size === CATEGORIES.length) return true; // 全選択時はフィルタなし
+        return selectedCategories.has(task.category?.toLowerCase());
+    };
+
+    // カテゴリ選択の切り替え
+    const toggleCategory = (categoryId) => {
+        setSelectedCategories(prev => {
+            const next = new Set(prev);
+            if (next.has(categoryId)) {
+                next.delete(categoryId);
+            } else {
+                next.add(categoryId);
+            }
+            return next;
+        });
+    };
+
+    // 全選択
+    const selectAllCategories = () => {
+        setSelectedCategories(new Set(CATEGORIES.map(c => c.id)));
+    };
+
+    // 全解除
+    const clearAllCategories = () => {
+        setSelectedCategories(new Set());
+    };
+
     const incompleteTasks = (filter === 'mine'
-        ? tasks.filter(t => !t.completed && isMyAssignee(t.assignee))
-        : tasks.filter(t => !t.completed)
+        ? tasks.filter(t => !t.completed && isMyAssignee(t.assignee) && matchesCategory(t))
+        : tasks.filter(t => !t.completed && matchesCategory(t))
     ).sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const completedTasks = tasks
-        .filter(t => t.completed)
+        .filter(t => t.completed && matchesCategory(t))
         .sort((a, b) => new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt));
 
     const groupedTasks = useMemo(() => {
@@ -129,7 +162,7 @@ const TasksTab = ({
                 </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0', marginBottom: '16px', backgroundColor: '#F0F0F0', borderRadius: '12px', padding: '4px' }}>
+            <div style={{ display: 'flex', gap: '0', marginBottom: '12px', backgroundColor: '#F0F0F0', borderRadius: '12px', padding: '4px' }}>
                 <button
                     onClick={() => setTaskTab('incomplete')}
                     style={{
@@ -154,6 +187,86 @@ const TasksTab = ({
                 >
                     完了済み ({completedTasks.length})
                 </button>
+            </div>
+
+            {/* カテゴリフィルタ（グリッド） */}
+            <div style={{
+                backgroundColor: '#F8F8F8',
+                borderRadius: '12px',
+                padding: '12px',
+                marginBottom: '16px',
+            }}>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '10px',
+                }}>
+                    <span style={{ fontSize: '13px', color: '#666', fontWeight: 'bold' }}>
+                        🏷️ カテゴリ
+                    </span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                            onClick={selectAllCategories}
+                            style={{
+                                padding: '4px 10px',
+                                border: 'none',
+                                borderRadius: '12px',
+                                backgroundColor: selectedCategories.size === CATEGORIES.length ? '#E0E0E0' : '#FF6B9D',
+                                color: selectedCategories.size === CATEGORIES.length ? '#999' : '#FFF',
+                                fontSize: '11px',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            全選択
+                        </button>
+                        <button
+                            onClick={clearAllCategories}
+                            style={{
+                                padding: '4px 10px',
+                                border: 'none',
+                                borderRadius: '12px',
+                                backgroundColor: selectedCategories.size === 0 ? '#E0E0E0' : '#EEE',
+                                color: selectedCategories.size === 0 ? '#999' : '#666',
+                                fontSize: '11px',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            クリア
+                        </button>
+                    </div>
+                </div>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '8px',
+                }}>
+                    {CATEGORIES.map(cat => {
+                        const isSelected = selectedCategories.has(cat.id);
+                        return (
+                            <button
+                                key={cat.id}
+                                onClick={() => toggleCategory(cat.id)}
+                                style={{
+                                    padding: '8px 6px',
+                                    border: isSelected ? `2px solid ${cat.color}` : '2px solid transparent',
+                                    borderRadius: '10px',
+                                    backgroundColor: isSelected ? `${cat.color}20` : '#FFF',
+                                    color: isSelected ? cat.color : '#999',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '4px',
+                                    fontWeight: isSelected ? 'bold' : 'normal',
+                                }}
+                            >
+                                {cat.icon} {cat.label}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             {loading && <p style={{ textAlign: 'center', color: '#888', fontSize: '13px' }}>読み込み中...</p>}

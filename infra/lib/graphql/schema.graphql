@@ -13,9 +13,12 @@ scalar AWSJSON
 enum Category {
   CLEANING
   COOKING
+  LAUNDRY
+  DISHES
   SHOPPING
   CHILDCARE
   PET
+  STUDY
   OTHER
 }
 
