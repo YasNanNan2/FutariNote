@@ -59,6 +59,36 @@ export const handler: AppSyncResolverHandler<null, InviteCode> = async (event) =
     throw new Error('Failed to get user information');
   }
 
+  // 同じユーザーの古い招待コードを削除
+  try {
+    // INVITE#で始まるアイテムをスキャンして、userIdが一致するものを探す
+    const scanResult = await dynamodb.scan({
+      TableName: TABLE_NAME,
+      FilterExpression: 'begins_with(PK, :pk) AND userId = :userId',
+      ExpressionAttributeValues: {
+        ':pk': 'INVITE#',
+        ':userId': userId,
+      },
+    });
+
+    // 見つかった古いコードを削除
+    if (scanResult.Items && scanResult.Items.length > 0) {
+      console.log(`Deleting ${scanResult.Items.length} old invite codes for user ${userId}`);
+      for (const item of scanResult.Items) {
+        await dynamodb.delete({
+          TableName: TABLE_NAME,
+          Key: {
+            PK: item.PK,
+            SK: item.SK,
+          },
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Failed to delete old invite codes:', error);
+    // 削除に失敗しても新しいコード生成は続行
+  }
+
   // 招待コード生成（6桁英数字）
   const generateCode = (): string => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 紛らわしい文字を除外

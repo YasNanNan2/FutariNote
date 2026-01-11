@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { COLORS } from '../../constants';
 import InviteFlow from '../onboarding/InviteFlow';
 
-const SettingsTab = ({ currentUser, partner, onUpdateUser, onSignOut, onDeleteAccount, showNotification, refreshAuth }) => {
+const SettingsTab = ({ currentUser, members = [], onUpdateUser, onSignOut, onDeleteAccount, showNotification, refreshAuth }) => {
+    // 他メンバー（自分以外）
+    const otherMembers = members.filter(m => m.userId !== currentUser?.userId);
     const [editName, setEditName] = useState(currentUser?.name || '');
     const [editColor, setEditColor] = useState(currentUser?.color || '#FF6B9D');
     const [showInviteFlow, setShowInviteFlow] = useState(false);
@@ -46,10 +48,9 @@ const SettingsTab = ({ currentUser, partner, onUpdateUser, onSignOut, onDeleteAc
     if (showInviteFlow) {
         return (
             <InviteFlow
+                inviteOnly={true}
                 onComplete={() => {
                     setShowInviteFlow(false);
-                    showNotification('パートナーと連携しました！', 'success');
-                    window.location.reload();
                 }}
                 onSkip={() => setShowInviteFlow(false)}
             />
@@ -156,51 +157,108 @@ const SettingsTab = ({ currentUser, partner, onUpdateUser, onSignOut, onDeleteAc
                 marginBottom: '16px',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
             }}>
-                <h3 style={{ margin: '0 0 16px', fontSize: '16px' }}>💑 パートナー連携</h3>
-                {partner ? (
+                <h3 style={{ margin: '0 0 16px', fontSize: '16px' }}>
+                    👥 メンバー ({members.length}人)
+                </h3>
+
+                {/* 自分 */}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px',
+                    backgroundColor: '#F0F8FF',
+                    borderRadius: '12px',
+                    marginBottom: '8px',
+                }}>
                     <div style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '50%',
+                        backgroundColor: currentUser?.color || '#FF6B9D',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '12px',
-                        padding: '12px',
-                        backgroundColor: '#F8F8F8',
-                        borderRadius: '12px',
+                        justifyContent: 'center',
+                        color: '#FFF',
+                        fontWeight: 'bold',
                     }}>
+                        {(currentUser?.name || currentUser?.email)?.[0]?.toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <p style={{ margin: 0, fontWeight: 'bold' }}>
+                            {currentUser?.name || currentUser?.email}
+                            <span style={{
+                                marginLeft: '8px',
+                                fontSize: '11px',
+                                color: '#888',
+                                backgroundColor: '#E0E0E0',
+                                padding: '2px 6px',
+                                borderRadius: '8px',
+                            }}>自分</span>
+                        </p>
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#888' }}>
+                            {currentUser?.email}
+                        </p>
+                    </div>
+                </div>
+
+                {/* 他メンバー */}
+                {otherMembers.map(member => (
+                    <div
+                        key={member.userId}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '12px',
+                            backgroundColor: '#F8F8F8',
+                            borderRadius: '12px',
+                            marginBottom: '8px',
+                        }}
+                    >
                         <div style={{
                             width: '44px',
                             height: '44px',
                             borderRadius: '50%',
-                            backgroundColor: partner.color || '#4ECDC4',
+                            backgroundColor: member.color || '#4ECDC4',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: '#FFF',
                             fontWeight: 'bold',
                         }}>
-                            {(partner.name || partner.email)?.[0]?.toUpperCase()}
+                            {(member.name || member.email)?.[0]?.toUpperCase()}
                         </div>
-                        <div>
-                            <p style={{ margin: 0, fontWeight: 'bold' }}>{partner.name || partner.email}</p>
-                            <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#888' }}>連携中</p>
+                        <div style={{ flex: 1 }}>
+                            <p style={{ margin: 0, fontWeight: 'bold' }}>{member.name || member.email}</p>
+                            <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#888' }}>
+                                {member.email}
+                            </p>
                         </div>
                     </div>
-                ) : (
-                    <button
-                        onClick={() => setShowInviteFlow(true)}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            border: '2px dashed #DDD',
-                            borderRadius: '12px',
-                            backgroundColor: 'transparent',
-                            color: '#666',
-                            fontSize: '14px',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        パートナーを招待する
-                    </button>
-                )}
+                ))}
+
+                {/* 招待ボタン */}
+                <button
+                    onClick={() => setShowInviteFlow(true)}
+                    style={{
+                        width: '100%',
+                        padding: '12px',
+                        marginTop: '8px',
+                        border: '2px dashed #DDD',
+                        borderRadius: '12px',
+                        backgroundColor: 'transparent',
+                        color: '#666',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                    }}
+                >
+                    + メンバーを招待する
+                </button>
             </div>
 
             <div style={{

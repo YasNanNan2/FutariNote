@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useInvite } from '../../hooks/useInvite';
 import ColorPicker from './ColorPicker';
 import './InitialSetup.css';
@@ -10,10 +10,19 @@ import './InitialSetup.css';
  * - 新規カップル作成: 新しいpartnerIdを採番
  * - 既存カップル参加: 招待コードからpartnerIdを取得
  */
-const InitialSetup = ({ onComplete }) => {
-  const [step, setStep] = useState('choice'); // 'choice' | 'join' | 'color'
+const InitialSetup = ({ onComplete, inviteCode = null }) => {
+  // 招待コードがURLから渡された場合は自動で参加画面へ
+  const [step, setStep] = useState(inviteCode ? 'join' : 'choice'); // 'choice' | 'join' | 'color'
   const [partnerId, setPartnerId] = useState(null);
-  const [inputCode, setInputCode] = useState('');
+  const [inputCode, setInputCode] = useState(inviteCode || '');
+
+  // 招待コードが後から渡された場合も対応
+  useEffect(() => {
+    if (inviteCode && step === 'choice') {
+      setStep('join');
+      setInputCode(inviteCode);
+    }
+  }, [inviteCode, step]);
 
   const { loading, error, joinCouple, clearError } = useInvite();
 
@@ -36,6 +45,13 @@ const InitialSetup = ({ onComplete }) => {
 
     try {
       const result = await joinCouple(inputCode.trim().toUpperCase());
+
+      // 既にメンバーの場合 → セットアップ完了としてホーム画面へ
+      if (result?.alreadyMember) {
+        setStep('already-member');
+        return;
+      }
+
       // joinCoupleが成功したら、色を選択する画面へ
       // partnerIdはjoinCoupleで既に設定済み
       setPartnerId(result.id); // カップルIDをpartnerIdとして使用
@@ -142,6 +158,29 @@ const InitialSetup = ({ onComplete }) => {
   // 色選択画面（参加後）
   if (step === 'color-after-join') {
     return <ColorPicker onComplete={handleColorCompleteAfterJoin} />;
+  }
+
+  // 既にメンバー画面
+  if (step === 'already-member') {
+    return (
+      <div className="initial-setup-container">
+        <div className="initial-setup-card">
+          <div className="setup-icon">✅</div>
+          <h2>既にメンバーです</h2>
+          <p className="setup-description">
+            このグループには既に参加しています。<br />
+            ホーム画面へ移動します。
+          </p>
+
+          <button
+            className="submit-button"
+            onClick={() => onComplete?.(null, null)}
+          >
+            ホームへ
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return null;

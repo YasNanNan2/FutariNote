@@ -17,7 +17,7 @@ const getWeekStart = (date) => {
 
 const TasksTab = ({
     currentUser,
-    partner,
+    otherMembers = [],
     tasks,
     filter,
     setFilter,
@@ -41,8 +41,12 @@ const TasksTab = ({
         if (isMyAssignee(assignee)) {
             return currentUser?.name || currentUser?.email;
         }
-        if (partner && (assignee === partner.userId || assignee === partner.name || assignee === partner.email)) {
-            return partner.name || partner.email;
+        // 他メンバーから該当者を探す
+        const matchedMember = otherMembers.find(m =>
+            assignee === m.userId || assignee === m.name || assignee === m.email
+        );
+        if (matchedMember) {
+            return matchedMember.name || matchedMember.email;
         }
         return assignee;
     };
@@ -51,8 +55,12 @@ const TasksTab = ({
         if (isMyAssignee(assignee)) {
             return currentUser?.color || '#FF6B9D';
         }
-        if (partner && (assignee === partner.userId || assignee === partner.name || assignee === partner.email)) {
-            return partner.color || '#4ECDC4';
+        // 他メンバーから該当者を探す
+        const matchedMember = otherMembers.find(m =>
+            assignee === m.userId || assignee === m.name || assignee === m.email
+        );
+        if (matchedMember) {
+            return matchedMember.color || '#4ECDC4';
         }
         return '#888';
     };

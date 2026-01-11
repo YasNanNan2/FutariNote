@@ -134,6 +134,7 @@ export const handler: AppSyncResolverHandler<{}, DeleteAccountResult> = async (e
       }
     } catch (error) {
       console.error('カップルメタデータ更新エラー:', error);
+      throw new Error('Failed to update couple metadata');
     }
   }
 

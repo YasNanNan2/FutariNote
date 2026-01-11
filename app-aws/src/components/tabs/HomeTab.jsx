@@ -33,7 +33,7 @@ const getStampEmoji = (stampType) => {
 
 const HomeTab = ({
     currentUser,
-    partner,
+    otherMembers = [],
     tasks,
     weeklyStampCount,
     timeline,
@@ -42,12 +42,21 @@ const HomeTab = ({
     receivedStamps = [],
     onSettingsClick,
 }) => {
-    // パートナーが担当かどうか判定
-    const isPartnerAssignee = (assignee) => {
-        if (!partner) return false;
-        return assignee === partner.userId ||
-               assignee === partner.name ||
-               assignee === partner.email;
+    // 後方互換のためpartnerも維持（最初の他メンバー）
+    const partner = otherMembers[0] || null;
+
+    // 他メンバーが担当かどうか判定
+    const isOtherMemberAssignee = (assignee) => {
+        return otherMembers.some(m =>
+            assignee === m.userId || assignee === m.name || assignee === m.email
+        );
+    };
+
+    // assigneeから該当メンバーを取得
+    const getMemberByAssignee = (assignee) => {
+        return otherMembers.find(m =>
+            assignee === m.userId || assignee === m.name || assignee === m.email
+        );
     };
 
     // assigneeからニックネームを取得
@@ -55,8 +64,9 @@ const HomeTab = ({
         if (assignee === currentUser?.userId || assignee === currentUser?.name || assignee === currentUser?.email) {
             return currentUser?.name || currentUser?.email;
         }
-        if (partner && (assignee === partner.userId || assignee === partner.name || assignee === partner.email)) {
-            return partner.name || partner.email;
+        const matchedMember = getMemberByAssignee(assignee);
+        if (matchedMember) {
+            return matchedMember.name || matchedMember.email;
         }
         return assignee;
     };
@@ -66,8 +76,9 @@ const HomeTab = ({
         if (assignee === currentUser?.userId || assignee === currentUser?.name || assignee === currentUser?.email) {
             return currentUser?.color || '#FF6B9D';
         }
-        if (partner && (assignee === partner.userId || assignee === partner.name || assignee === partner.email)) {
-            return partner.color || '#4ECDC4';
+        const matchedMember = getMemberByAssignee(assignee);
+        if (matchedMember) {
+            return matchedMember.color || '#4ECDC4';
         }
         return '#888';
     };
@@ -77,10 +88,10 @@ const HomeTab = ({
         .filter(t => t.completed)
         .sort((a, b) => new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt));
 
-    // パートナーの最近完了タスク（感謝を送りやすく）- 感謝済みは除外
-    const partnerRecentCompletions = completedTasks
-        .filter(t => isPartnerAssignee(t.assignee) && !thankedTaskIds.has(t.id))
-        .slice(0, 3);
+    // 他メンバーの最近完了タスク（感謝を送りやすく）- 感謝済みは除外
+    const othersRecentCompletions = completedTasks
+        .filter(t => isOtherMemberAssignee(t.assignee) && !thankedTaskIds.has(t.id))
+        .slice(0, 5);
 
     // 最近の活動（タイムライン）
     const recentActivities = [
@@ -109,23 +120,42 @@ const HomeTab = ({
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ display: 'flex' }}>
+                        {/* 自分のアバター */}
                         <div style={{
                             width: '36px', height: '36px', borderRadius: '50%',
                             backgroundColor: currentUser?.color || '#FF6B9D',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             color: '#FFF', fontWeight: 'bold', fontSize: '14px',
+                            zIndex: otherMembers.length + 1,
                         }}>
                             {(currentUser?.name || currentUser?.email)?.[0]?.toUpperCase()}
                         </div>
-                        {partner && (
+                        {/* 他メンバーのアバター（最大4人まで表示） */}
+                        {otherMembers.slice(0, 4).map((member, index) => (
+                            <div
+                                key={member.userId}
+                                style={{
+                                    width: '36px', height: '36px', borderRadius: '50%',
+                                    backgroundColor: member.color || '#4ECDC4',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    color: '#FFF', fontWeight: 'bold', fontSize: '14px',
+                                    marginLeft: '-12px', border: '2px solid #FFF',
+                                    zIndex: otherMembers.length - index,
+                                }}
+                            >
+                                {(member.name || member.email)?.[0]?.toUpperCase()}
+                            </div>
+                        ))}
+                        {/* 5人以上の場合は+Nを表示 */}
+                        {otherMembers.length > 4 && (
                             <div style={{
                                 width: '36px', height: '36px', borderRadius: '50%',
-                                backgroundColor: partner.color || '#4ECDC4',
+                                backgroundColor: '#888',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: '#FFF', fontWeight: 'bold', fontSize: '14px',
+                                color: '#FFF', fontWeight: 'bold', fontSize: '12px',
                                 marginLeft: '-12px', border: '2px solid #FFF',
                             }}>
-                                {(partner.name || partner.email)?.[0]?.toUpperCase()}
+                                +{otherMembers.length - 4}
                             </div>
                         )}
                     </div>
@@ -145,12 +175,12 @@ const HomeTab = ({
 
             {/* 今週の感謝カード */}
             <div
-                onClick={() => partner && setShowStampSelector('general')}
+                onClick={() => otherMembers.length > 0 && setShowStampSelector('general')}
                 style={{
                     background: 'linear-gradient(135deg, #FFE66D 0%, #F8B500 100%)',
                     borderRadius: '20px', padding: '20px', marginBottom: '24px',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    cursor: partner ? 'pointer' : 'default',
+                    cursor: otherMembers.length > 0 ? 'pointer' : 'default',
                     boxShadow: '0 4px 15px rgba(248, 181, 0, 0.3)',
                 }}
             >
@@ -160,19 +190,20 @@ const HomeTab = ({
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <div style={{ fontSize: '40px' }}>🎉</div>
-                    {partner && <span style={{ fontSize: '11px', opacity: 0.8, marginTop: '4px' }}>タップで送る</span>}
+                    {otherMembers.length > 0 && <span style={{ fontSize: '11px', opacity: 0.8, marginTop: '4px' }}>タップで送る</span>}
                 </div>
             </div>
 
-            {/* パートナーへの感謝（未感謝の完了タスク） */}
-            {partner && partnerRecentCompletions.length > 0 && (
+            {/* メンバーへの感謝（未感謝の完了タスク） */}
+            {otherMembers.length > 0 && othersRecentCompletions.length > 0 && (
                 <div style={{ marginBottom: '24px' }}>
                     <h2 style={{ margin: '0 0 12px', fontSize: '17px', fontWeight: 'bold' }}>
-                        🙏 {partner.name || partner.email}さんへ感謝
+                        🙏 メンバーへ感謝
                     </h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        {partnerRecentCompletions.map(task => {
+                        {othersRecentCompletions.map(task => {
                             const cat = CATEGORIES.find(c => c.id === task.category?.toLowerCase());
+                            const assignee = getMemberByAssignee(task.assignee);
                             return (
                                 <div
                                     key={task.id}
@@ -182,7 +213,15 @@ const HomeTab = ({
                                         borderRadius: '14px', boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
                                     }}
                                 >
-                                    <span style={{ fontSize: '24px' }}>{cat?.icon || '✅'}</span>
+                                    {/* 担当者アバター */}
+                                    <div style={{
+                                        width: '40px', height: '40px', borderRadius: '50%',
+                                        backgroundColor: assignee?.color || '#4ECDC4',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        color: '#FFF', fontWeight: 'bold', fontSize: '16px', flexShrink: 0,
+                                    }}>
+                                        {(assignee?.name || assignee?.email)?.[0]?.toUpperCase()}
+                                    </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <p style={{
                                             margin: 0, fontSize: '15px', fontWeight: '500',
@@ -191,7 +230,7 @@ const HomeTab = ({
                                             {task.title}
                                         </p>
                                         <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#888' }}>
-                                            {task.completedAt ? getRelativeTime(task.completedAt) : ''}
+                                            {cat?.icon || '✅'} {assignee?.name || assignee?.email} • {task.completedAt ? getRelativeTime(task.completedAt) : ''}
                                         </p>
                                     </div>
                                     <button
@@ -213,7 +252,7 @@ const HomeTab = ({
             )}
 
             {/* 受け取った感謝 */}
-            {partner && receivedStamps.length > 0 && (
+            {otherMembers.length > 0 && receivedStamps.length > 0 && (
                 <div style={{ marginBottom: '24px' }}>
                     <h2 style={{ margin: '0 0 12px', fontSize: '17px', fontWeight: 'bold' }}>
                         💌 もらった感謝
@@ -223,6 +262,8 @@ const HomeTab = ({
                             // タスクに対する感謝の場合、タスク情報を取得
                             const relatedTask = stamp.taskId ? tasks.find(t => t.id === stamp.taskId) : null;
                             const cat = relatedTask ? CATEGORIES.find(c => c.id === relatedTask.category?.toLowerCase()) : null;
+                            // 送信者を特定
+                            const sender = otherMembers.find(m => m.userId === stamp.from) || partner;
 
                             return (
                                 <div
@@ -239,15 +280,15 @@ const HomeTab = ({
                                 >
                                     <div style={{
                                         width: '44px', height: '44px', borderRadius: '50%',
-                                        backgroundColor: partner.color || '#4ECDC4',
+                                        backgroundColor: sender?.color || '#4ECDC4',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         color: '#FFF', fontWeight: 'bold', fontSize: '16px', flexShrink: 0,
                                     }}>
-                                        {(partner.name || partner.email)?.[0]?.toUpperCase()}
+                                        {(sender?.name || sender?.email)?.[0]?.toUpperCase()}
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <p style={{ margin: 0, fontSize: '14px', color: '#333' }}>
-                                            <span style={{ fontWeight: 'bold' }}>{partner.name || partner.email}</span>
+                                            <span style={{ fontWeight: 'bold' }}>{sender?.name || sender?.email}</span>
                                             <span style={{ color: '#888' }}> さんから</span>
                                         </p>
                                         {relatedTask ? (
@@ -288,8 +329,8 @@ const HomeTab = ({
                 </div>
             )}
 
-            {/* パートナー未連携時のメッセージ */}
-            {!partner && (
+            {/* メンバー未連携時のメッセージ */}
+            {otherMembers.length === 0 && (
                 <div style={{
                     backgroundColor: '#FFF',
                     borderRadius: '16px',
@@ -298,10 +339,10 @@ const HomeTab = ({
                     textAlign: 'center',
                     boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
                 }}>
-                    <div style={{ fontSize: '48px', marginBottom: '12px' }}>💑</div>
-                    <h3 style={{ margin: '0 0 8px', fontSize: '16px' }}>パートナーと連携しよう</h3>
+                    <div style={{ fontSize: '48px', marginBottom: '12px' }}>👥</div>
+                    <h3 style={{ margin: '0 0 8px', fontSize: '16px' }}>メンバーを招待しよう</h3>
                     <p style={{ margin: 0, fontSize: '13px', color: '#888' }}>
-                        設定画面からパートナーを招待して、<br />感謝を送り合いましょう
+                        設定画面からメンバーを招待して、<br />感謝を送り合いましょう
                     </p>
                 </div>
             )}

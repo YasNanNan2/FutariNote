@@ -18,6 +18,28 @@ export const useInvite = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // 既存の招待コード取得
+  const getMyInviteCode = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await client.graphql({
+        query: queries.getMyInviteCode,
+      });
+      const code = result.data.getMyInviteCode;
+      if (code) {
+        setInviteCode(code);
+      }
+      return code;
+    } catch (err) {
+      console.error('招待コード取得エラー:', err);
+      // 取得失敗は致命的ではないのでエラーは設定しない
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // 招待コード生成
   const createInviteCode = useCallback(async () => {
     try {
@@ -69,6 +91,20 @@ export const useInvite = () => {
       return result.data.joinCouple;
     } catch (err) {
       console.error('カップル参加エラー:', err);
+
+      // エラーメッセージからコードを抽出
+      const errorMessage = err.errors?.[0]?.message || err.message || '';
+
+      // 特別なエラーコードを検出
+      if (errorMessage.includes('ALREADY_MEMBER')) {
+        // 既にメンバー → 成功扱いで返す
+        return { alreadyMember: true };
+      }
+      if (errorMessage.includes('ALREADY_IN_ANOTHER_GROUP')) {
+        setError('既にグループに所属しています。退会してから参加してください。');
+        throw err;
+      }
+
       setError(err.message || 'カップルへの参加に失敗しました');
       throw err;
     } finally {
@@ -103,6 +139,7 @@ export const useInvite = () => {
     inviteCode,
     loading,
     error,
+    getMyInviteCode,
     createInviteCode,
     validateCode,
     joinCouple,

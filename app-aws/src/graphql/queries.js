@@ -175,3 +175,14 @@ export const validateInviteCode = /* GraphQL */ `
     }
   }
 `;
+
+export const getMyInviteCode = /* GraphQL */ `
+  query GetMyInviteCode {
+    getMyInviteCode {
+      code
+      userId
+      partnerId
+      expiresAt
+    }
+  }
+`;

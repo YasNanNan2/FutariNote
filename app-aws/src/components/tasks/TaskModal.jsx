@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CATEGORIES } from '../../constants';
 
-const TaskModal = ({ task, currentUser, partner, onSave, onDelete, onClose, loading }) => {
+const TaskModal = ({ task, currentUser, otherMembers = [], onSave, onDelete, onClose, loading }) => {
     const isEditing = task && task.id; // prefillDateのみの場合は新規作成
     const [title, setTitle] = useState(isEditing ? task.title : '');
     const [date, setDate] = useState(task?.prefillDate || task?.date || new Date().toISOString().split('T')[0]);
@@ -13,16 +13,21 @@ const TaskModal = ({ task, currentUser, partner, onSave, onDelete, onClose, load
 
         // 既にuserIdの場合はそのまま
         if (assigneeValue === currentUser?.userId) return currentUser?.userId;
-        if (partner && assigneeValue === partner.userId) return partner.userId;
+
+        // 他メンバーのuserIdの場合はそのまま
+        const matchedMember = otherMembers.find(m => m.userId === assigneeValue);
+        if (matchedMember) return matchedMember.userId;
 
         // 自分のname/emailの場合はuserIdに変換
         if (assigneeValue === currentUser?.name || assigneeValue === currentUser?.email) {
             return currentUser?.userId;
         }
-        // パートナーのname/emailの場合はパートナーのuserIdに変換
-        if (partner && (assigneeValue === partner.name || assigneeValue === partner.email)) {
-            return partner.userId;
-        }
+
+        // 他メンバーのname/emailの場合はそのメンバーのuserIdに変換
+        const matchedByNameEmail = otherMembers.find(m =>
+            assigneeValue === m.name || assigneeValue === m.email
+        );
+        if (matchedByNameEmail) return matchedByNameEmail.userId;
 
         // 不明な値（古いニックネーム等）の場合はデフォルトで自分を選択
         return currentUser?.userId;
@@ -120,11 +125,11 @@ const TaskModal = ({ task, currentUser, partner, onSave, onDelete, onClose, load
                             <option value={currentUser?.userId}>
                                 {currentUser?.name || currentUser?.email}
                             </option>
-                            {partner && (
-                                <option value={partner.userId}>
-                                    {partner.name || partner.email}
+                            {otherMembers.map(member => (
+                                <option key={member.userId} value={member.userId}>
+                                    {member.name || member.email}
                                 </option>
-                            )}
+                            ))}
                         </select>
                     </div>
                 </div>

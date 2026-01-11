@@ -199,6 +199,9 @@ type Query {
 
   # 招待コード検証
   validateInviteCode(code: String!): InviteCode
+
+  # 自分の招待コード取得
+  getMyInviteCode: InviteCode
 }
 
 # ===========================================

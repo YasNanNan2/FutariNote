@@ -11,7 +11,9 @@
       "Bash(aws logs:*)",
       "Bash(tree:*)",
       "Bash(aws s3 sync:*)",
-      "Bash(aws cloudfront create-invalidation:*)"
+      "Bash(aws cloudfront create-invalidation:*)",
+      "Bash(aws cognito-idp list-user-pools:*)",
+      "Bash(aws s3 ls:*)"
     ]
   }
 }

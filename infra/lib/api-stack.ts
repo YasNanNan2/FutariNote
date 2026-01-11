@@ -749,6 +749,29 @@ export class ApiStack extends cdk.Stack {
             fieldName: 'updateUser',
         });
 
+        // getMyInviteCode Lambda - 自分の有効な招待コードを取得
+        const getMyInviteCodeFn = new lambda.Function(this, 'GetMyInviteCodeFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'get-my-invite-code.handler',
+            code: lambda.Code.fromAsset(path.join(__dirname, 'lambda')),
+            environment: {
+                TABLE_NAME: this.table.tableName,
+            },
+            timeout: cdk.Duration.seconds(10),
+        });
+        this.table.grantReadWriteData(getMyInviteCodeFn);
+
+        const getMyInviteCodeDs = this.api.addLambdaDataSource(
+            'GetMyInviteCodeDataSource',
+            getMyInviteCodeFn
+        );
+
+        // getMyInviteCode Resolver
+        getMyInviteCodeDs.createResolver('GetMyInviteCodeResolver', {
+            typeName: 'Query',
+            fieldName: 'getMyInviteCode',
+        });
+
         // ===========================================
         // Tags
         // ===========================================
